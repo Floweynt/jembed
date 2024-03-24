@@ -1,0 +1,69 @@
+// auto-generated lexer
+%%
+throw new LexerError(new CodeRange(range));
+%%
+throw new IllegalStateException();
+%%
+\s+ -> break;
+"\0" -> return new Token(range, Token.TokenType.EOF);
+# operators
+"..." -> return new Token(range, Token.TokenType.OP_PACK);
+"=" -> return new Token(range, Token.TokenType.OP_ASSIGN);
+">>=" -> return new Token(range, Token.TokenType.OP_SHR_ASSIGN);
+">>>=" -> return new Token(range, Token.TokenType.OP_USHR_ASSIGN);
+"<<=" -> return new Token(range, Token.TokenType.OP_SHL_ASSIGN);
+"+=" -> return new Token(range, Token.TokenType.OP_ADD_ASSIGN);
+"-=" -> return new Token(range, Token.TokenType.OP_SUB_ASSIGN);
+"*=" -> return new Token(range, Token.TokenType.OP_MUL_ASSIGN);
+"/=" -> return new Token(range, Token.TokenType.OP_DIV_ASSIGN);
+"%=" -> return new Token(range, Token.TokenType.OP_MOD_ASSIGN);
+"&=" -> return new Token(range, Token.TokenType.OP_AND_ASSIGN);
+"^=" -> return new Token(range, Token.TokenType.OP_XOR_ASSIGN);
+"|=" -> return new Token(range, Token.TokenType.OP_OR_ASSIGN);
+"++" -> return new Token(range, Token.TokenType.OP_INC_OP);
+"--" -> return new Token(range, Token.TokenType.OP_DEC_OP);
+"<=" -> return new Token(range, Token.TokenType.OP_LE);
+">=" -> return new Token(range, Token.TokenType.OP_GE);
+"==" -> return new Token(range, Token.TokenType.OP_EQ);
+"!=" -> return new Token(range, Token.TokenType.OP_NEQ);
+"<" -> return new Token(range, Token.TokenType.OP_LT);
+">" -> return new Token(range, Token.TokenType.OP_GT);
+";" -> return new Token(range, Token.TokenType.SEMI);
+"," -> return new Token(range, Token.TokenType.COMMA);
+":" -> return new Token(range, Token.TokenType.COLON);
+"{" -> return new Token(range, Token.TokenType.OPEN_CURLY);
+"}" -> return new Token(range, Token.TokenType.CLOSE_CURLY);
+"(" -> return new Token(range, Token.TokenType.OPEN_PAREN);
+")" -> return new Token(range, Token.TokenType.CLOSE_PAREN);
+"[" -> return new Token(range, Token.TokenType.OPEN_BRACKET);
+"]" -> return new Token(range, Token.TokenType.CLOSE_BRACKET);
+"&" -> return new Token(range, Token.TokenType.OP_BITWISE_AND);
+"~" -> return new Token(range, Token.TokenType.OP_BITWISE_NOT);
+"^" -> return new Token(range, Token.TokenType.OP_BITWISE_XOR);
+"|" -> return new Token(range, Token.TokenType.OP_BITWISE_OR);
+">>" -> return new Token(range, Token.TokenType.OP_SHR);
+"<<" -> return new Token(range, Token.TokenType.OP_SHL);
+">>>" -> return new Token(range, Token.TokenType.OP_USHR);
+"&&" -> return new Token(range, Token.TokenType.OP_LOGICAL_AND);
+"||" -> return new Token(range, Token.TokenType.OP_LOGICAL_OR);
+"!" -> return new Token(range, Token.TokenType.OP_LOGICAL_NOT);
+"-" -> return new Token(range, Token.TokenType.OP_SUB);
+"+" -> return new Token(range, Token.TokenType.OP_PLUS);
+"*" -> return new Token(range, Token.TokenType.OP_MUL);
+"/" -> return new Token(range, Token.TokenType.OP_DIV);
+"%" -> return new Token(range, Token.TokenType.OP_MOD);
+"->" -> return new Token(range, Token.TokenType.ARROW);
+"." -> return new Token(range, Token.TokenType.OP_MEMBER);
+"?" -> return new Token(range, Token.TokenType.OP_QUESTION);
+
+# identifier
+[A-Za-z_]\w* -> return fromIdentifier(range, reader.slice(start.idx()));
+
+# hex, oct, etc literals
+0[xX][0-9a-fA-F]+ -> return fromNumber(range, reader.slice(start.idx() + 2), 16);
+0[0-7]+ -> return fromNumber(range, reader.slice(start.idx() + 1), 8);
+[1-9]\d* -> return fromNumber(range, reader.slice(start.idx()), 10);
+"0" -> return fromNumber(range, "0", 10);
+
+\" -> return new Token(range, Token.TokenType.DOUBLE_QT);
+

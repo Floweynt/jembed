@@ -1,0 +1,45 @@
+// auto-generated lexer
+%%
+throw new LexerError(new CodeRange(start_line, start_col, start_bytes, curr_line, curr_col, curr_bytes));
+%%
+throw new IllegalStateException();
+%%
+"\\a" -> tu.report(Severity.WARNING, "illegal escape sequence in string, ignoring", range, "for some incomprehensible reason java doesn't have \\a..."); break;
+"\\b" -> return new Token(range, Token.TokenType.STR_DATA, "\b");
+"\\e" -> return new Token(range, Token.TokenType.STR_DATA, "\033");
+"\\f" -> return new Token(range, Token.TokenType.STR_DATA, "\f");
+"\\n" -> return new Token(range, Token.TokenType.STR_DATA, "\n");
+"\\r" -> return new Token(range, Token.TokenType.STR_DATA, "\r");
+"\\t" -> return new Token(range, Token.TokenType.STR_DATA, "\t");
+"\\v" -> tu.report(Severity.WARNING, "illegal escape sequence in string, ignoring", range, "for some incomprehensible reason java doesn't have \\v..."); break;
+"\\\\" -> return new Token(range, Token.TokenType.STR_DATA, "\\");
+"\\'" -> return new Token(range, Token.TokenType.STR_DATA, "'");
+"\\\"" -> return new Token(range, Token.TokenType.STR_DATA, "\"");
+
+# octal handling
+\\[0-7][0-7]?[0-7]? -> return new Token(range, Token.TokenType.STR_DATA, String.valueOf((char) Integer.parseInt(reader.slice(start.idx() + 1), 8)));
+
+# handle just \x, and warn here
+# this is the fallback case for if parsing fails... warn and ignore!
+\\x -> tu.report(Severity.WARNING, "hex escape sequence should take at least one hex digit", range, "a hex escape sequence looks like \\xF or \\x1a"); break;
+# it's not well specified but I think it's reasonable to only consume 2 hex digits at max, and treat the rest as string
+\\x[0-9a-fA-F][0-9a-fA-F]? -> return new Token(range, Token.TokenType.STR_DATA, String.valueOf((char) Integer.parseInt(reader.slice(start.idx() + 1), 16)));
+
+# Unicode error handling...
+\\u -> throw new AssertionError("not impl");
+# lol wtf unicode sucks, IDK how to handle it...
+\\u[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F] -> throw new AssertionError("not impl");
+
+# error handling case
+\\[^abefnrtvx0-7u\\"'\0] -> tu.report(Severity.WARNING, "illegal escape sequence in string, ignoring", range, "unsupported character '" + reader.slice(start.idx() + 1) + "'"); break;
+
+# eof bullshit
+"\0" -> return new Token(range, Token.TokenType.EOF);
+
+[^$\\{"\0\n]+ -> return new Token(range, Token.TokenType.STR_DATA, reader.slice(start.idx()));
+\" -> return new Token(range, Token.TokenType.DOUBLE_QT);
+# reuse open curly...
+"${" -> return new Token(range, Token.TokenType.OPEN_CURLY);
+# fallbacks...
+"$$" -> return new Token(range, Token.TokenType.STR_DATA, "$");
+"$" -> return new Token(range, Token.TokenType.STR_DATA, "$");
