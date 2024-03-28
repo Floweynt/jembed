@@ -1,6 +1,8 @@
 package com.floweytf.jvmir.util;
 
-import com.floweytf.jvmir.Instr;
+import com.floweytf.jvmir.InstrNode;
+import com.floweytf.jvmir.LocalRef;
+import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Type;
 
 import java.io.IOException;
@@ -16,7 +18,7 @@ public class DotEmitter implements GraphEmitter {
     }
 
     @Override
-    public void emitEdge(Instr from, String port, Instr to, EdgeKind kind) {
+    public void emitEdge(InstrNode from, String port, InstrNode to, EdgeKind kind) {
         builder.append("node").append(to.hashCode()).append(":opc:s")
             .append(" -> ")
             .append("node").append(from.hashCode()).append(":").append(port);
@@ -25,20 +27,25 @@ public class DotEmitter implements GraphEmitter {
         case SOLID -> {
         }
         case DASHED -> builder.append(" [style=dotted]");
+        case CHAIN -> builder.append(" [style=dotted,color=blue]");
         }
 
         builder.append("\n");
     }
 
     @Override
-    public void emitNode(Instr instr) {
+    public void emitNode(InstrNode instr, @Nullable String extraLabel) {
         final var name = "node" + instr.hashCode();
         builder.append(name).append(" [label=\"{");
 
-        final var opCount = instr.operandsCount();
+        final var opCount = instr.operands().size();
 
-        if (opCount != 0) {
+        if (opCount != 0 || instr.chain() != null) {
             builder.append("{");
+
+            if (instr.chain() != null) {
+                builder.append("<chain>ch|");
+            }
 
             for (int i = 0; i < opCount; i++) {
                 var operandName = instr.getOperandName(i);
@@ -46,10 +53,9 @@ public class DotEmitter implements GraphEmitter {
                     operandName = String.valueOf(i);
 
                 builder.append("<").append(i).append(">").append(operandName);
-
-                if (i + 1 != opCount)
-                    builder.append("|");
+                builder.append("|");
             }
+            builder.setLength(builder.length() - 1);
 
             builder.append("}|");
         }
@@ -63,13 +69,18 @@ public class DotEmitter implements GraphEmitter {
                 final var imm = imms.get(i);
                 final var immName = immNames.get(i);
                 builder.append("<i").append(i).append(">[I]");
-                if (imm instanceof Instr) {
+                if (imm instanceof InstrNode) {
                     builder.append(immName).append("|");
+                } else if (imm instanceof LocalRef local) {
+                    builder.append(immName).append(": #").append(local.index()).append("|");
                 } else {
                     builder.append(immName).append(": ").append(imm).append("|");
                 }
             }
         }
+
+        if (extraLabel != null)
+            builder.append(extraLabel).append("|");
 
         final var typeName = Utils.coalesce(
             Utils.mapNull(instr.type(), Type::toString),
@@ -80,7 +91,7 @@ public class DotEmitter implements GraphEmitter {
     }
 
     @Override
-    public void done(Instr root) {
+    public void done(InstrNode root) {
         try {
             var writer = new OutputStreamWriter(output);
 

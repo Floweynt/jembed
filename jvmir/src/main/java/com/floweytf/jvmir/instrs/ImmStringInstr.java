@@ -10,12 +10,12 @@ import java.util.List;
 /**
  * Represents arithmetic addition operation between two values of the same type.
  */
-public final class ImmI32Instr extends Instr {
+public final class ImmStringInstr extends Instr {
     private static final List<String> IMM_NAMES = List.of("value");
-    private final int value;
+    private final String value;
 
-    public ImmI32Instr(int value) {
-        super(Type.INT_TYPE);
+    public ImmStringInstr(String value) {
+        super(Type.getType(String.class));
         this.value = value;
     }
 
@@ -37,7 +37,7 @@ public final class ImmI32Instr extends Instr {
     /**
      * @return The value to load.
      */
-    public int value() {
+    public String value() {
         return value;
     }
 }

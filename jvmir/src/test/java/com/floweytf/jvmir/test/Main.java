@@ -1,28 +1,33 @@
 package com.floweytf.jvmir.test;
 
-import com.floweytf.jvmir.InstructionDAG;
+import com.floweytf.jvmir.CGMethod;
 import com.floweytf.jvmir.pass.Pass;
-import com.floweytf.jvmir.pass.legalize.InsertDiscardPass;
+import com.floweytf.jvmir.pass.legalize.TreeifyPass;
 import com.floweytf.jvmir.util.DotEmitter;
+import org.objectweb.asm.Type;
 
 public class Main {
     public static void main(String... args) {
-        var dag = new InstructionDAG();
+        var method = new CGMethod();
+        var dag = method.defineBlock();
 
-        var add = dag.makeIAdd(
-            dag.makeConst(1),
-            dag.makeConst(2)
+        dag.invokeMember(
+            "charAt",
+            Type.CHAR_TYPE,
+            dag.immediate("foo"),
+            dag.immediate(2)
         );
 
-        dag.getRoot().addOperand(add);
+        final var pipeline =
+            Pass.of(
+                Pass.forEachBlock(
+                    Pass.validatePass(),
+                    new TreeifyPass(),
+                    Pass.validatePass(),
+                    Pass.printPass(new DotEmitter(System.out), false)
+                )
+            );
 
-        dag.getRoot().addOperand(dag.makeBranch(add));
-
-
-        final var pipeline = Pass.printPass(new DotEmitter(System.out))
-            .and(InsertDiscardPass.PASS)
-            .and(Pass.validatePass());
-
-        pipeline.apply(dag);
+        pipeline.apply(method);
     }
 }

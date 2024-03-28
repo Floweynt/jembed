@@ -8,8 +8,8 @@ import java.util.function.Supplier;
  * @param <T>
  */
 public class Cache<T> implements Supplier<T> {
-    private T impl;
     private final Supplier<T> supplier;
+    private T impl;
 
     /**
      * Constructs a cache from a supplier.
@@ -22,7 +22,7 @@ public class Cache<T> implements Supplier<T> {
 
     @Override
     public T get() {
-        if(this.impl == null) {
+        if (this.impl == null) {
             this.impl = supplier.get();
         }
 
